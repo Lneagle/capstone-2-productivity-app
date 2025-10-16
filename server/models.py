@@ -14,6 +14,14 @@ class Team(db.Model):
 
   def __repr__(self):
     return f'<Team {self.id} {self.name}>'
+  
+class TeamSchema(Schema):
+  id = fields.Int()
+  name = fields.String()
+  department = fields.String()
+
+  users = fields.List(fields.Nested(lambda: UserSchema(exclude=('team',))))
+
 
 class User(db.Model):
   __tablename__ = 'users'
@@ -32,6 +40,16 @@ class User(db.Model):
   def __repr__(self):
     return f'<User {self.name} {self.team.name}>'
 
+class UserSchema(Schema):
+  id = fields.Int()
+  name = fields.String()
+  admin = fields.Boolean()
+
+  team = fields.Nested(TeamSchema(exclude=('users',)))
+  tasks = fields.List(fields.Nested(lambda: TaskSchema(exclude=('assignee',))))
+
+  time_entries = fields.List(fields.Nested(lambda: TimeEntrySchema(exclude=('user',))))
+
 class Client(db.Model):
   __tablename__ = 'clients'
 
@@ -43,6 +61,13 @@ class Client(db.Model):
 
   def __repr__(self):
     return f'<Client {self.name}>'
+  
+class ClientSchema(Schema):
+  id = fields.Int()
+  name = fields.String()
+  contact = fields.String()
+
+  projects = fields.List(fields.Nested(lambda: ProjectSchema(exclude=('client',))))
   
 class Project(db.Model):
   __tablename__ = 'projects'
@@ -58,6 +83,14 @@ class Project(db.Model):
 
   def __repr__(self):
     return f'<Project {self.name}>'
+  
+class ProjectSchema(Schema):
+  id = fields.Int()
+  name = fields.String()
+  completed = fields.Boolean()
+
+  client = fields.Nested(ClientSchema(exclude=('projects',)))
+  tasks = fields.List(fields.Nested(lambda: TaskSchema(exclude=('project',))))
   
 class Task(db.Model):
   __tablename__ = 'tasks'
@@ -78,6 +111,17 @@ class Task(db.Model):
   def __repr__(self):
     return f'<Task {self.name}>'
   
+class TaskSchema(Schema):
+  id = fields.Int()
+  name = fields.String()
+  completed = fields.Boolean()
+  priority = fields.String()
+
+  project = fields.Nested(ProjectSchema(exclude=('tasks',)))
+  assignee = fields.Nested(UserSchema(exclude=('tasks',)))
+
+  time_entries = fields.List(fields.Nested(lambda: TimeEntrySchema(exclude=('task',))))
+  
 class TimeEntry(db.Model):
   __tablename__ = 'time_entries'
 
@@ -93,3 +137,11 @@ class TimeEntry(db.Model):
 
   def __repr__(self):
     return f'<TimeEntry {self.start_time} - {self.end_time}>'
+  
+class TimeEntrySchema(Schema):
+  id = fields.Int()
+  start_time = fields.DateTime()
+  end_time = fields.DateTime()
+
+  task = fields.Nested(TaskSchema(exclude=('time_entries',)))
+  user = fields.Nested(UserSchema(exclude=('time_entries',)))
