@@ -11,6 +11,7 @@ class Team(db.Model):
   department = db.Column(db.String)
 
   users = db.relationship('User', back_populates='team')
+  projects = db.relationship('Project', back_populates='team')
 
   def __repr__(self):
     return f'<Team {self.id} {self.name}>'
@@ -21,6 +22,7 @@ class TeamSchema(Schema):
   department = fields.String()
 
   users = fields.List(fields.Nested(lambda: UserSchema(exclude=('team',))))
+  projects = fields.List(fields.Nested(lambda: ProjectSchema(exclude=('team',))))
 
 
 class User(db.Model):
@@ -56,6 +58,7 @@ class Client(db.Model):
   id = db.Column(db.Integer, primary_key=True)
   name = db.Column(db.String, unique=True, nullable=False)
   contact = db.Column(db.String)
+  active = db.Column(db.Boolean)
 
   projects = db.relationship('Project', back_populates='client')
 
@@ -66,6 +69,7 @@ class ClientSchema(Schema):
   id = fields.Int()
   name = fields.String()
   contact = fields.String()
+  active = fields.Boolean()
 
   projects = fields.List(fields.Nested(lambda: ProjectSchema(exclude=('client',))))
   
@@ -77,8 +81,10 @@ class Project(db.Model):
   completed = db.Column(db.Boolean)
 
   client_id = db.Column(db.Integer, db.ForeignKey('clients.id'))
+  team_id = db.Column(db.Integer, db.ForeignKey('teams.id'))
 
   client = db.relationship('Client', back_populates='projects')
+  team = db.relationship('Team', back_populates = 'projects')
   tasks = db.relationship('Task', back_populates='project')
 
   def __repr__(self):
@@ -90,6 +96,7 @@ class ProjectSchema(Schema):
   completed = fields.Boolean()
 
   client = fields.Nested(ClientSchema(exclude=('projects',)))
+  team = fields.Nested(TeamSchema(exclude=('projects',)))
   tasks = fields.List(fields.Nested(lambda: TaskSchema(exclude=('project',))))
   
 class Task(db.Model):
