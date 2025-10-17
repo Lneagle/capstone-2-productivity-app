@@ -41,9 +41,9 @@ with app.app_context():
   db.session.add_all([team1_admin, team2_admin, *users])
 
   print('Creating clients...')
-  client1 = Client(name='Viridian Dynamics', contact="Veronica")
-  client2 = Client(name='Dunder Mifflin', contact="Michael")
-  client3 = Client(name='Kwik-E-Mart', contact="Apu")
+  client1 = Client(name='Viridian Dynamics', contact="Veronica", active=True)
+  client2 = Client(name='Dunder Mifflin', contact="Michael", active=True)
+  client3 = Client(name='Kwik-E-Mart', contact="Apu", active=True)
 
   db.session.add_all([client1, client2, client3])
 
@@ -53,6 +53,7 @@ with app.app_context():
   for i in range(10):
     project = Project(name=fake.catch_phrase(), completed=False)
     project.client = rc([client1, client2, client3])
+    project.team = rc([team1, team2])
     projects.append(project)
 
   db.session.add_all(projects)
