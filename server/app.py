@@ -8,6 +8,8 @@ api.add_resource(ClientIndex, '/clients', endpoint='clients')
 api.add_resource(ClientById, '/clients/<int:id>', endpoint='clients/<int:id>')
 api.add_resource(ProjectsByTeam, '/teams/<int:team_id>/projects', endpoint='/teams/<int:team_id>/projects')
 api.add_resource(ProjectById, '/teams/<int:team_id>/projects/<int:project_id>', endpoint='/teams/<int:team_id>/projects/<int:project_id>')
+api.add_resource(TimeEntriesByUser, '/teams/<int:team_id>/users/<int:user_id>/time_entries', endpoint='/teams/<int:team_id>/users/<int:user_id>/time_entries')
+api.add_resource(TimeEntryById, '/teams/<int:team_id>/users/<int:user_id>/time_entries/<int:entry_id>', endpoint='/teams/<int:team_id>/users/<int:user_id>/time_entries/<int:entry_id>')
 
 if __name__ == '__main__':
   app.run(port=5555, debug=True)

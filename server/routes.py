@@ -66,6 +66,19 @@ class ProjectsByTeam(Resource):
 		else:
 			return {'errors': ['404 Not Found']}, 404
 		
+	def post(self, team_id):
+		request_json = request.get_json()
+		new_project = Project(name=request_json['name'], completed=False)
+		new_project.client = Client.query.filter_by(id=request_json["client_id"]).first()
+		new_project.team = Team.query.filter_by(id=team_id).first()
+		
+		try:
+			db.session.add(new_project)
+			db.session.commit()
+			return ProjectSchema().dump(new_project), 201
+		except IntegrityError:
+			return {'errors': ['422 Unprocessable Entity']}, 422
+		
 class ProjectById(Resource):
 	def get(self, team_id, project_id):
 		(project, err_response) = verify_ids(model=Project, isList=False, item_id=project_id, team_id=team_id)
@@ -86,3 +99,81 @@ class ProjectById(Resource):
 			return ProjectSchema(exclude=('team',)).dump(project), 200
 		else:
 			return err_response
+		
+	def delete(self, team_id, project_id):
+		(project, err_response) = verify_ids(model=Project, isList=False, item_id=project_id, team_id=team_id)
+
+		if project:
+			time_entries = TimeEntry.query.join(Task).filter(Task.project_id == project_id).all()
+			if time_entries:
+				return {'errors': ['405 Method Not Allowed']}, 405
+			else:
+				db.session.delete(project)
+				db.session.commit()
+				return {}, 204
+		else:
+			return err_response
+		
+class TimeEntriesByUser(Resource):
+	def get(self, team_id, user_id):
+		entries = TimeEntry.query.filter_by(user_id=user_id).all()
+
+		if entries:
+			if not User.query.filter_by(id=user_id, team_id=team_id).first():
+				return {'errors': ['403 Forbidden']}, 403
+			return [TimeEntrySchema().dump(entry) for entry in entries]
+		else:
+			return {'errors': ['404 Not Found']}, 404
+		
+	def post(self, team_id, user_id):
+		request_json = request.get_json()
+
+		if not User.query.filter_by(id=user_id, team_id=team_id).first() or not Task.query.filter_by(id=request_json['task_id'], assignee_id=user_id):
+				return {'errors': ['403 Forbidden']}, 403
+		new_entry = TimeEntry(start_time=request_json['start_time'])
+		new_entry.user = User.query.filter_by(id=user_id).first()
+		new_entry.task = Task.query.filter_by(id=request_json['task_id'])
+		
+		try:
+			db.session.add(new_entry)
+			db.session.commit()
+			return TimeEntrySchema().dump(new_entry), 201
+		except IntegrityError:
+			return {'errors': ['422 Unprocessable Entity']}, 422
+		
+class TimeEntryById(Resource):
+	def get(self, team_id, user_id, entry_id):
+		entry = TimeEntry.query.filter_by(id=entry_id)
+
+		if entry:
+			if not User.query.filter_by(id=user_id, team_id=team_id).first():
+				return {'errors': ['403 Forbidden']}, 403
+			return TimeEntrySchema().dump(entry)
+		else:
+			return {'errors': ['404 Not Found']}, 404
+
+	def patch(self, team_id, user_id, entry_id):
+		entry = TimeEntry.query.filter_by(id=entry_id)
+
+		if entry:
+			if not User.query.filter_by(id=user_id, team_id=team_id).first():
+				return {'errors': ['403 Forbidden']}, 403
+			request_json = request.get_json()
+			for attr in request_json:
+				setattr(entry, attr, request_json[attr])
+			db.session.commit()
+			return TimeEntrySchema().dump(entry), 200
+		else:
+			return {'errors': ['404 Not Found']}, 404
+		
+	def delete(self, team_id, user_id, entry_id):
+		entry = TimeEntry.query.filter_by(id=entry_id)
+
+		if entry:
+			if not User.query.filter_by(id=user_id, team_id=team_id).first():
+				return {'errors': ['403 Forbidden']}, 403
+			db.session.delete(entry)
+			db.session.commit()
+			return {}, 204
+		else:
+			return {'errors': ['404 Not Found']}, 404
