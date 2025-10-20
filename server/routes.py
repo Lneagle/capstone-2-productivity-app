@@ -26,6 +26,15 @@ class UsersByTeam(Resource):
 			return [UserSchema().dump(user) for user in users]
 		else:
 			return {'errors': ['404 Not Found']}, 404
+		
+class UserById(Resource):
+	def get(self, team_id, user_id):
+		(user, err_response) = verify_ids(model=User, isList=False, item_id=user_id, team_id=team_id)
+
+		if user:
+			return UserSchema().dump(user)
+		else:
+			return err_response
 
 class ClientIndex(Resource):
 	def get(self):
@@ -143,12 +152,12 @@ class TimeEntriesByUser(Resource):
 		
 class TimeEntryById(Resource):
 	def get(self, team_id, user_id, entry_id):
-		entry = TimeEntry.query.filter_by(id=entry_id)
+		entry = TimeEntry.query.filter_by(id=entry_id).first()
 
 		if entry:
-			if not User.query.filter_by(id=user_id, team_id=team_id).first():
+			if not User.query.filter_by(id=user_id, team_id=team_id).first() or not entry.user_id == user_id:
 				return {'errors': ['403 Forbidden']}, 403
-			return TimeEntrySchema().dump(entry)
+			return TimeEntrySchema().dump(entry), 200
 		else:
 			return {'errors': ['404 Not Found']}, 404
 

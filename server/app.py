@@ -4,6 +4,7 @@ from config import app, db, api
 from routes import *
 
 api.add_resource(UsersByTeam, '/teams/<int:team_id>/users', endpoint='/teams/<int:team_id>/users')
+api.add_resource(UserById, '/teams/<int:team_id>/users/<int:user_id>', endpoint='/teams/<int:team_id>/users/<int:user_id>')
 api.add_resource(ClientIndex, '/clients', endpoint='clients')
 api.add_resource(ClientById, '/clients/<int:id>', endpoint='clients/<int:id>')
 api.add_resource(ProjectsByTeam, '/teams/<int:team_id>/projects', endpoint='/teams/<int:team_id>/projects')

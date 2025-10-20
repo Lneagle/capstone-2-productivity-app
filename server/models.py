@@ -21,8 +21,8 @@ class TeamSchema(Schema):
   name = fields.String()
   department = fields.String()
 
-  users = fields.List(fields.Nested(lambda: UserSchema(exclude=('team',))))
-  projects = fields.List(fields.Nested(lambda: ProjectSchema(exclude=('team',))))
+  users = fields.List(fields.Nested(lambda: UserSchema(only=('name',))))
+  projects = fields.List(fields.Nested(lambda: ProjectSchema(only=('name',))))
 
 
 class User(db.Model):
@@ -47,8 +47,8 @@ class UserSchema(Schema):
   name = fields.String()
   admin = fields.Boolean()
 
-  team = fields.Nested(TeamSchema(exclude=('users',)))
-  tasks = fields.List(fields.Nested(lambda: TaskSchema(exclude=('assignee',))))
+  team = fields.Nested(TeamSchema(only=('name',)))
+  tasks = fields.List(fields.Nested(lambda: TaskSchema(only=('name', ))))
 
   time_entries = fields.List(fields.Nested(lambda: TimeEntrySchema(exclude=('user',))))
 
@@ -71,7 +71,7 @@ class ClientSchema(Schema):
   contact = fields.String()
   active = fields.Boolean()
 
-  projects = fields.List(fields.Nested(lambda: ProjectSchema(exclude=('client',))))
+  projects = fields.List(fields.Nested(lambda: ProjectSchema(only=('name',))))
   
 class Project(db.Model):
   __tablename__ = 'projects'
@@ -95,9 +95,9 @@ class ProjectSchema(Schema):
   name = fields.String()
   completed = fields.Boolean()
 
-  client = fields.Nested(ClientSchema(exclude=('projects',)))
-  team = fields.Nested(TeamSchema(exclude=('projects',)))
-  tasks = fields.List(fields.Nested(lambda: TaskSchema(exclude=('project',))))
+  client = fields.Nested(ClientSchema(only=('name',)))
+  team = fields.Nested(TeamSchema(only=('name',)))
+  tasks = fields.List(fields.Nested(lambda: TaskSchema(only=('name',))))
   
 class Task(db.Model):
   __tablename__ = 'tasks'
@@ -124,10 +124,10 @@ class TaskSchema(Schema):
   completed = fields.Boolean()
   priority = fields.String()
 
-  project = fields.Nested(ProjectSchema(exclude=('tasks',)))
-  assignee = fields.Nested(UserSchema(exclude=('tasks',)))
+  project = fields.Nested(ProjectSchema(only=('name',)))
+  assignee = fields.Nested(UserSchema(only=('name',)))
 
-  time_entries = fields.List(fields.Nested(lambda: TimeEntrySchema(exclude=('task',))))
+  time_entries = fields.List(fields.Nested(lambda: TimeEntrySchema(only=('start_time', 'end_time'))))
   
 class TimeEntry(db.Model):
   __tablename__ = 'time_entries'
@@ -150,5 +150,5 @@ class TimeEntrySchema(Schema):
   start_time = fields.DateTime()
   end_time = fields.DateTime()
 
-  task = fields.Nested(TaskSchema(exclude=('time_entries',)))
-  user = fields.Nested(UserSchema(exclude=('time_entries',)))
+  task = fields.Nested(TaskSchema(only=('name',)))
+  user = fields.Nested(UserSchema(only=('name',)))

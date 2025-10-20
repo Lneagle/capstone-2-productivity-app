@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 from sqlalchemy import text
-from random import choice as rc
+from random import choice as rc, randrange
 from faker import Faker
+from datetime import timedelta
 from config import db, app
 from models import *
 
@@ -64,9 +65,26 @@ with app.app_context():
   for i in range(50):
     task = Task(name=fake.bs(), completed=False, priority=rc(['High', 'Medium', 'Low']))
     task.project = rc(projects)
+    task.assignee = rc(task.project.team.users)
     tasks.append(task)
 
-  db.session.add_all(projects)
+  db.session.add_all(tasks)
+  print('Creating time entries...')
+
+  entries = []
+
+  for i in range(100):
+    start = fake.past_datetime()
+    while start.weekday() > 4 or start.time().hour < 8 or start.time().hour > 17:
+      start = fake.past_datetime()
+    interval = randrange(15, 120)
+    end = start + timedelta(minutes=interval)
+    entry = TimeEntry(start_time=start, end_time=end)
+    entry.task = rc(tasks)
+    entry.user = entry.task.assignee
+    entries.append(entry)
+  
+  db.session.add_all(entries)
 
   db.session.commit()
   print('Complete')
