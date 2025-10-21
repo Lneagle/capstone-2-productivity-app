@@ -1,6 +1,7 @@
 from flask import request, jsonify, make_response
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
+from datetime import datetime
 from config import db
 from models import *
 
@@ -152,9 +153,9 @@ class TimeEntriesByUser(Resource):
 
 		if not User.query.filter_by(id=user_id, team_id=team_id).first() or not Task.query.filter_by(id=request_json['task_id'], assignee_id=user_id):
 				return {'errors': ['403 Forbidden']}, 403
-		new_entry = TimeEntry(start_time=request_json['start_time'])
+		new_entry = TimeEntry(start_time=datetime.fromtimestamp(request_json['start_time'] / 1000))
 		new_entry.user = User.query.filter_by(id=user_id).first()
-		new_entry.task = Task.query.filter_by(id=request_json['task_id'])
+		new_entry.task = Task.query.filter_by(id=request_json['task_id']).first()
 		
 		try:
 			db.session.add(new_entry)
@@ -175,21 +176,24 @@ class TimeEntryById(Resource):
 			return {'errors': ['404 Not Found']}, 404
 
 	def patch(self, team_id, user_id, entry_id):
-		entry = TimeEntry.query.filter_by(id=entry_id)
+		entry = TimeEntry.query.filter_by(id=entry_id).first()
 
 		if entry:
-			if not User.query.filter_by(id=user_id, team_id=team_id).first():
+			if not entry.user_id == user_id:
 				return {'errors': ['403 Forbidden']}, 403
 			request_json = request.get_json()
 			for attr in request_json:
-				setattr(entry, attr, request_json[attr])
+				if attr == "end_time":
+					setattr(entry, attr, datetime.fromtimestamp(request_json[attr] / 1000))
+				else:
+					setattr(entry, attr, request_json[attr])
 			db.session.commit()
 			return TimeEntrySchema().dump(entry), 200
 		else:
 			return {'errors': ['404 Not Found']}, 404
 		
 	def delete(self, team_id, user_id, entry_id):
-		entry = TimeEntry.query.filter_by(id=entry_id)
+		entry = TimeEntry.query.filter_by(id=entry_id).first()
 
 		if entry:
 			if not User.query.filter_by(id=user_id, team_id=team_id).first():

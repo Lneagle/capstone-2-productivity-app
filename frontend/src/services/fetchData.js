@@ -13,6 +13,53 @@ export const fetchUserTasks = async () => {
     return data;
   } catch (error) {
     console.error("Error fetching users:", error);
-    throw error; // Re-throw to allow component-level error handling
+    throw error;
+  }
+};
+
+export const createTimeEntry = async (task_id) => {
+  const start_time = new Date().getTime();
+  try {
+    const response = await fetch(`${API_URL}/teams/${TEAM_ID}/users/${USER_ID}/time_entries`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        task_id: task_id,
+        start_time: start_time
+      }),
+    });
+    if (!response.ok) {
+      throw new Error(`Could not create time entry`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error:", error);
+    throw error;
+  }
+};
+
+export const endTimeEntry = async (entry_id) => {
+  const end_time = new Date().getTime();
+  try {
+    const response = await fetch(`${API_URL}/teams/${TEAM_ID}/users/${USER_ID}/time_entries/${entry_id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        end_time: end_time
+      }),
+    });
+    if (!response.ok) {
+      throw new Error(`Could not edit time entry`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error:", error);
+    throw error;
   }
 };

@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { createTimeEntry, endTimeEntry } from "../services/fetchData";
 
 function TaskList({ tasks }) {
   const sortedTasks = [...tasks];
   const isAdmin = false; //replace with cookie later
   const [enabledId, setEnabledId] = useState(null);
   const [isStartDisabled, setIsStartDisabled] = useState(false)
+  const [error, setError] = useState(null);
+  const entryId = useRef(null);
 
   sortedTasks.sort((a, b) => {
     const priorities = ["High", "Medium", "Low"]
@@ -21,14 +24,34 @@ function TaskList({ tasks }) {
     }
   });
 
-  const startTask = (id) => {
-    setEnabledId(id);
+  const postEntry = async (task_id) => {
+    try {
+      const data = await createTimeEntry(task_id);
+      entryId.current = data.id;
+    } catch (err) {
+      setError(err);
+    }
+  };
+
+  const endEntry = async (task_id) => {
+    try {
+      const data = await endTimeEntry(entryId.current);
+      entryId.current = null;
+    } catch (err) {
+      setError(err);
+    }
+  };
+
+  const startTask = (task_id) => {
+    setEnabledId(task_id);
     setIsStartDisabled(true);
+    postEntry(task_id);
   }
 
-  const stopTask = (id) => {
+  const stopTask = (task_id) => {
     setEnabledId(null);
     setIsStartDisabled(false);
+    endEntry(task_id);
   }
 
   const taskList = sortedTasks.map(task =>
@@ -37,8 +60,8 @@ function TaskList({ tasks }) {
 			<td>{task.project.name}</td>
 			<td>{task.name}</td>
 			<td>{task.priority}</td>
-      {isAdmin ? <td></td> : ''}
-			<td>{task.completed ? '✓' : ''}</td>
+      {isAdmin && <td></td>}
+			<td>{task.completed && '✓'}</td>
 			<td>{isAdmin ? <button onClick={() => editTask(task.id)}>Edit</button> : <button onClick={() => startTask(task.id)} disabled={isStartDisabled}>Start</button>}</td>
 			<td>{isAdmin ? <button onClick={() => deleteTask(task.id)}>Delete</button> : <button onClick={() => stopTask(task.id)} disabled={task.id != enabledId}>Stop</button>}</td>
 		</tr>
@@ -46,6 +69,7 @@ function TaskList({ tasks }) {
 
 	return (
 		<>
+      {error && <p>Error: {error.message}</p>}
       <table>
 				<thead>
 					<tr>
@@ -53,7 +77,7 @@ function TaskList({ tasks }) {
 						<th>Project</th>
 						<th>Task Name</th>
 						<th>Priority</th>
-            {isAdmin ? <th>Assignee</th>: ''}
+            {isAdmin && <th>Assignee</th>}
 						<th>Completed</th>
 						<th></th>
 						<th></th>
