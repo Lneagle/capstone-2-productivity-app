@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
@@ -9,6 +10,7 @@ import os
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False

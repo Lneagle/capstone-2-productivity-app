@@ -123,6 +123,19 @@ class ProjectById(Resource):
 		else:
 			return err_response
 		
+class TasksByUser(Resource):
+	def get(self, team_id, user_id):
+		tasks = Task.query.filter_by(assignee_id=user_id).all()
+
+		if tasks:
+			if not User.query.filter_by(id=user_id, team_id=team_id).first():
+				return {'errors': ['403 Forbidden']}, 403
+			return [TaskSchema().dump(task) for task in tasks]
+		else:
+			return {'errors': ['404 Not Found']}, 404
+		
+# TODO: Create TaskById (under projects: get, post, patch), TasksByProject (get, delete)
+		
 class TimeEntriesByUser(Resource):
 	def get(self, team_id, user_id):
 		entries = TimeEntry.query.filter_by(user_id=user_id).all()
