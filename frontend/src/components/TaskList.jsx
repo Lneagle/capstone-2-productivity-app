@@ -1,28 +1,10 @@
-import { useState, useEffect } from "react";
-import { fetchUserTasks } from "../services/fetchData";
+import { useState } from "react";
 
-function TaskList() {
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [sortConfig, setSortConfig] = useState(null);
-
-  useEffect(() => {
-    const getTasks = async () => {
-      try {
-        const data = await fetchUserTasks();
-        setTasks(data);
-      } catch (err) {
-        setError(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getTasks();
-  }, []);
-
+function TaskList({ tasks }) {
   const sortedTasks = [...tasks];
+  const isAdmin = false; //replace with cookie later
+  const [enabledId, setEnabledId] = useState(null);
+  const [isStartDisabled, setIsStartDisabled] = useState(false)
 
   sortedTasks.sort((a, b) => {
     const priorities = ["High", "Medium", "Low"]
@@ -39,20 +21,28 @@ function TaskList() {
     }
   });
 
+  const startTask = (id) => {
+    setEnabledId(id);
+    setIsStartDisabled(true);
+  }
+
+  const stopTask = (id) => {
+    setEnabledId(null);
+    setIsStartDisabled(false);
+  }
+
   const taskList = sortedTasks.map(task =>
 		<tr key={task.id}>
 			<td>{task.project.client.name}</td>
 			<td>{task.project.name}</td>
 			<td>{task.name}</td>
 			<td>{task.priority}</td>
+      {isAdmin ? <td></td> : ''}
 			<td>{task.completed ? '✓' : ''}</td>
-			<td><button>Start</button></td>
-			<td><button>Stop</button></td>
+			<td>{isAdmin ? <button onClick={() => editTask(task.id)}>Edit</button> : <button onClick={() => startTask(task.id)} disabled={isStartDisabled}>Start</button>}</td>
+			<td>{isAdmin ? <button onClick={() => deleteTask(task.id)}>Delete</button> : <button onClick={() => stopTask(task.id)} disabled={task.id != enabledId}>Stop</button>}</td>
 		</tr>
 	);
-
-  if (loading) return <p>Loading task...</p>;
-  if (error) return <p>Error: {error.message}</p>;
 
 	return (
 		<>
@@ -63,6 +53,7 @@ function TaskList() {
 						<th>Project</th>
 						<th>Task Name</th>
 						<th>Priority</th>
+            {isAdmin ? <th>Assignee</th>: ''}
 						<th>Completed</th>
 						<th></th>
 						<th></th>
