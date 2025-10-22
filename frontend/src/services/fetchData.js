@@ -3,6 +3,10 @@ const TEAM_ID = 1;
 const USER_ID = 1;
 const API_URL = "http://localhost:5555";
 
+export const fetchTeamUsers = async () => {
+
+}
+
 export const fetchUserTasks = async () => {
   try {
     const response = await fetch(`${API_URL}/teams/${TEAM_ID}/users/${USER_ID}/tasks`);
@@ -63,3 +67,23 @@ export const endTimeEntry = async (entry_id) => {
     throw error;
   }
 };
+
+export const patchTask = async(client_id, project_id, task_id, body) => {
+  try {
+    const response = await fetch(`${API_URL}/clients/${client_id}/projects/${project_id}/tasks/${task_id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: body,
+    });
+    if (!response.ok) {
+      throw new Error(`Could not edit task`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error:", error);
+    throw error;
+  }
+}

@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
-import { createTimeEntry, endTimeEntry } from "../services/fetchData";
+import { createTimeEntry, endTimeEntry, patchTask } from "../services/fetchData";
 
-function TaskList({ tasks }) {
+function TaskList({ tasks, setTasks }) {
   const sortedTasks = [...tasks];
   const isAdmin = false; //replace with cookie later
   const [enabledId, setEnabledId] = useState(null);
@@ -46,13 +46,27 @@ function TaskList({ tasks }) {
     setEnabledId(task_id);
     setIsStartDisabled(true);
     postEntry(task_id);
-  }
+  };
 
   const stopTask = (task_id) => {
     setEnabledId(null);
     setIsStartDisabled(false);
     endEntry(task_id);
-  }
+  };
+
+  const completeTask = async (client_id, project_id, task_id) => {
+    try {
+      const data = await patchTask(client_id, project_id, task_id, JSON.stringify({"completed": true}));
+      sortedTasks.forEach(task => {
+        if (task.id == data.id) {
+          task.completed = data.completed;
+        }
+      })
+      setTasks(sortedTasks);
+    } catch (err) {
+      setError(err);
+    }
+  };
 
   const taskList = sortedTasks.map(task =>
 		<tr key={task.id}>
@@ -61,8 +75,8 @@ function TaskList({ tasks }) {
 			<td>{task.name}</td>
 			<td>{task.priority}</td>
       {isAdmin && <td></td>}
-			<td>{task.completed && '✓'}</td>
-			<td>{isAdmin ? <button onClick={() => editTask(task.id)}>Edit</button> : <button onClick={() => startTask(task.id)} disabled={isStartDisabled}>Start</button>}</td>
+			<td>{task.completed ? '✓' : <button onClick={() => completeTask(task.project.client.id, task.project.id, task.id)}>Mark Completed</button>}</td>
+			<td>{isAdmin ? <button onClick={() => editTask(task.id)}>Edit</button> : <button onClick={() => startTask(task.id)} disabled={isStartDisabled || task.completed}>Start</button>}</td>
 			<td>{isAdmin ? <button onClick={() => deleteTask(task.id)}>Delete</button> : <button onClick={() => stopTask(task.id)} disabled={task.id != enabledId}>Stop</button>}</td>
 		</tr>
 	);

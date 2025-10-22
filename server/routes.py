@@ -135,7 +135,51 @@ class TasksByUser(Resource):
 		else:
 			return {'errors': ['404 Not Found']}, 404
 		
-# TODO: Create TaskById (under projects: get, post, patch), TasksByProject (get, delete)
+# TODO: Create TaskById (under projects: get, patch, delete), TasksByProject (get, post)
+
+class TasksByProject(Resource):
+	def post(self, client_id, project_id):
+		pass
+
+class TaskById(Resource):
+	def get(self, client_id, project_id, task_id):
+		task = Task.query.filter_by(id=task_id).first()
+
+		if task:
+			if task.project_id != project_id or task.project.client_id != client_id:
+				return {'errors': ['403 Forbidden']}, 403
+			return TaskSchema().dump(task)
+		else:
+			return {'errors': ['404 Not Found']}, 404
+		
+	def patch(self, client_id, project_id, task_id):
+		task = Task.query.filter_by(id=task_id).first()
+
+		if task:
+			if task.project_id != project_id or task.project.client_id != client_id:
+				return {'errors': ['403 Forbidden']}, 403
+			request_json = request.get_json()
+			for attr in request_json:
+				setattr(task, attr, request_json[attr])
+			db.session.commit()
+			return TaskSchema(exclude=('project',)).dump(task), 200
+		else:
+			return {'errors': ['404 Not Found']}, 404
+		
+	def delete(self, client_id, project_id, task_id):
+		task = Task.query.filter_by(id=task_id).first()
+
+		if task:
+			if task.project_id != project_id or task.project.client_id != client_id:
+				return {'errors': ['403 Forbidden']}, 403
+			if not task.time_entries:
+				db.session.delete(task)
+				db.session.commit()
+				return {}, 204
+			else:
+				return {'errors': ['403 Forbidden']}, 403
+		else:
+			return {'errors': ['404 Not Found']}, 404
 		
 class TimeEntriesByUser(Resource):
 	def get(self, team_id, user_id):

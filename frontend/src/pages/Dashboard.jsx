@@ -31,7 +31,7 @@ function Dashboard() {
 		<>
 			<NavBar />
 			<main>
-				<TaskList tasks={tasks} />
+				<TaskList tasks={tasks} setTasks={setTasks} />
         <StatusList />
 			</main>
 		</>
