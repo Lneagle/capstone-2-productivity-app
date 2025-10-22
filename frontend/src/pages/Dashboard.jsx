@@ -2,12 +2,15 @@ import { useState, useEffect } from "react";
 import NavBar from "../components/NavBar";
 import TaskList from "../components/TaskList";
 import StatusList from "../components/StatusList";
-import { fetchUserTasks } from "../services/fetchData";
+import { fetchTeamUsers, fetchUserTasks } from "../services/fetchData";
 
 function Dashboard() {
 	const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [tasksLoading, setTasksLoading] = useState(true);
+  const [tasksError, setTasksError] = useState(null);
+	const [teammates, setTeammates] = useState([]);
+  const [teamLoading, setTeamLoading] = useState(true);
+  const [teamError, setTeamError] = useState(null);
 
 	useEffect(() => {
     const getTasks = async () => {
@@ -15,24 +18,44 @@ function Dashboard() {
         const data = await fetchUserTasks();
         setTasks(data);
       } catch (err) {
-        setError(err);
+        setTasksError(err);
       } finally {
-        setLoading(false);
+        setTasksLoading(false);
       }
     };
 
     getTasks();
   }, []);
 
-  if (loading) return <p>Loading task...</p>;
-  if (error) return <p>Error: {error.message}</p>;
+	useEffect(() => {
+    const getTeam = async () => {
+      try {
+        const data = await fetchTeamUsers();
+        setTeammates(data);
+      } catch (err) {
+        setTeamError(err);
+      } finally {
+        setTeamLoading(false);
+      }
+    };
+
+    getTeam();
+  }, []);
 
 	return (
 		<>
 			<NavBar />
 			<main>
-				<TaskList tasks={tasks} setTasks={setTasks} />
-        <StatusList />
+				<section>
+					{tasksLoading && <p>Loading tasks...</p>}
+					{tasksError && <p>Error: {tasksError.message}</p>}
+					<TaskList tasks={tasks} setTasks={setTasks} />
+				</section>
+				<section>
+					{teamLoading && <p>Loading team statuses...</p>}
+					{teamError && <p>Error: {teamError.message}</p>}
+        	<StatusList teammates={teammates} setTeammates={setTeammates}/>
+				</section>
 			</main>
 		</>
 	)

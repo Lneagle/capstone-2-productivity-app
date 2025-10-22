@@ -4,7 +4,17 @@ const USER_ID = 1;
 const API_URL = "http://localhost:5555";
 
 export const fetchTeamUsers = async () => {
-
+  try {
+    const response = await fetch(`${API_URL}/teams/${TEAM_ID}/users`);
+    if (!response.ok) {
+      throw new Error(`Could not fetch users for team ${TEAM_ID}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    throw error;
+  }
 }
 
 export const fetchUserTasks = async () => {

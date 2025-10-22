@@ -48,7 +48,7 @@ class UserSchema(Schema):
   admin = fields.Boolean()
 
   team = fields.Nested(TeamSchema(only=('id', 'name')))
-  tasks = fields.List(fields.Nested(lambda: TaskSchema(only=('id', 'name'))))
+  tasks = fields.List(fields.Nested(lambda: TaskSchema(only=('id', 'name', 'priority'))))
 
   time_entries = fields.List(fields.Nested(lambda: TimeEntrySchema(exclude=('user',))))
 
@@ -150,5 +150,5 @@ class TimeEntrySchema(Schema):
   start_time = fields.DateTime()
   end_time = fields.DateTime()
 
-  task = fields.Nested(TaskSchema(only=('id', 'name')))
+  task = fields.Nested(TaskSchema(only=('id', 'name', 'priority')))
   user = fields.Nested(UserSchema(only=('id', 'name')))
