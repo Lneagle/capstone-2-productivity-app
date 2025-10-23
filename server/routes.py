@@ -1,7 +1,7 @@
 from flask import request, jsonify, make_response
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
-from datetime import datetime
+from datetime import datetime, date, time, timedelta
 from config import db
 from models import *
 
@@ -183,12 +183,14 @@ class TaskById(Resource):
 		
 class TimeEntriesByUser(Resource):
 	def get(self, team_id, user_id):
-		entries = TimeEntry.query.filter_by(user_id=user_id).all()
+		start_date = date.today() - timedelta(days=6) # return time entries for the last week
+		start_date = datetime.combine(start_date, time(0, 0))
+		entries = TimeEntry.query.filter_by(user_id=user_id).filter(TimeEntry.start_time >= start_date).all() 
 
 		if entries:
 			if not User.query.filter_by(id=user_id, team_id=team_id).first():
 				return {'errors': ['403 Forbidden']}, 403
-			return [TimeEntrySchema().dump(entry) for entry in entries]
+			return [TimeEntrySchema(exclude=('user',)).dump(entry) for entry in entries]
 		else:
 			return {'errors': ['404 Not Found']}, 404
 		

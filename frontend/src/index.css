@@ -73,3 +73,25 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+
+
+.timetable, .timetable * {
+  border: 1px solid #999;
+  border-collapse: collapse;
+}
+
+.timetable .client, .timetable .project, .timetable .task {
+  text-align: left;
+}
+
+.timetable .project {
+  padding-left: 1em;
+  font-size: 0.9em;
+}
+
+.timetable .task {
+  padding-left: 2em;
+  font-weight: normal;
+  font-size: 0.9em;
+}

@@ -26,7 +26,21 @@ export const fetchUserTasks = async () => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error("Error fetching users:", error);
+    console.error("Error:", error);
+    throw error;
+  }
+};
+
+export const fetchTimeEntries = async() => {
+  try {
+    const response = await fetch(`${API_URL}/teams/${TEAM_ID}/users/${USER_ID}/time_entries`);
+    if (!response.ok) {
+      throw new Error(`Could not fetch time entries for user ${USER_ID}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error:", error);
     throw error;
   }
 };
@@ -96,4 +110,4 @@ export const patchTask = async(client_id, project_id, task_id, body) => {
     console.error("Error:", error);
     throw error;
   }
-}
+};

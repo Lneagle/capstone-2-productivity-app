@@ -150,5 +150,5 @@ class TimeEntrySchema(Schema):
   start_time = fields.DateTime()
   end_time = fields.DateTime()
 
-  task = fields.Nested(TaskSchema(only=('id', 'name', 'priority')))
+  task = fields.Nested(TaskSchema(only=('id', 'name', 'priority', 'project')))
   user = fields.Nested(UserSchema(only=('id', 'name')))
