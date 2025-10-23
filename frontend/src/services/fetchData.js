@@ -45,6 +45,20 @@ export const fetchTimeEntries = async() => {
   }
 };
 
+export const fetchOpenTimeEntry = async() => {
+  try {
+    const response = await fetch(`${API_URL}/teams/${TEAM_ID}/users/${USER_ID}/time_entries?open_check=true`);
+    if (!response.ok) {
+      throw new Error(`Could not fetch open time entry for user ${USER_ID}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error:", error);
+    throw error;
+  }
+}
+
 export const createTimeEntry = async (task_id) => {
   const start_time = new Date().getTime();
   try {

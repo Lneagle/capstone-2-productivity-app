@@ -1,13 +1,16 @@
 import { useState, useRef } from "react";
 import { createTimeEntry, endTimeEntry, patchTask } from "../services/fetchData";
 
-function TaskList({ tasks, setTasks }) {
+function TaskList({ tasks, setTasks, openTaskId, openEntryId }) {
+  console.log(openTaskId, openEntryId);
   const sortedTasks = [...tasks];
   const isAdmin = false; //replace with cookie later
-  const [enabledId, setEnabledId] = useState(null);
-  const [isStartDisabled, setIsStartDisabled] = useState(false)
+  const [enabledId, setEnabledId] = useState(openTaskId);
+  console.log(enabledId)
+  const [isStartDisabled, setIsStartDisabled] = useState(openTaskId)
   const [error, setError] = useState(null);
-  const entryId = useRef(null);
+  const entryId = useRef(openEntryId);
+  console.log(entryId.current)
 
   sortedTasks.sort((a, b) => {
     const priorities = ["High", "Medium", "Low"]

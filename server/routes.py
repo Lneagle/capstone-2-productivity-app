@@ -1,5 +1,6 @@
 from flask import request, jsonify, make_response
 from flask_restful import Resource
+from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime, date, time, timedelta
 from config import db
@@ -183,16 +184,26 @@ class TaskById(Resource):
 		
 class TimeEntriesByUser(Resource):
 	def get(self, team_id, user_id):
-		start_date = date.today() - timedelta(days=6) # return time entries for the last week
-		start_date = datetime.combine(start_date, time(0, 0))
-		entries = TimeEntry.query.filter_by(user_id=user_id).filter(TimeEntry.start_time >= start_date).all() 
+		if not request.args.get('open_check'):
+			start_date = date.today() - timedelta(days=6) # return time entries for the last week
+			start_date = datetime.combine(start_date, time(0, 0))
+			entries = TimeEntry.query.filter_by(user_id=user_id).filter(TimeEntry.start_time >= start_date).all() 
 
-		if entries:
-			if not User.query.filter_by(id=user_id, team_id=team_id).first():
-				return {'errors': ['403 Forbidden']}, 403
-			return [TimeEntrySchema(exclude=('user',)).dump(entry) for entry in entries]
+			if entries:
+				if not User.query.filter_by(id=user_id, team_id=team_id).first():
+					return {'errors': ['403 Forbidden']}, 403
+				return [TimeEntrySchema(exclude=('user',)).dump(entry) for entry in entries], 200
+			else:
+				return {'errors': ['404 Not Found']}, 404
 		else:
-			return {'errors': ['404 Not Found']}, 404
+			open_entry = TimeEntry.query.filter_by(end_time=None).order_by(desc(TimeEntry.id)).first()
+			# return TimeEntrySchema(exclude=('user',)).dump(open_entry), 200
+			if open_entry:
+				if not user_id == open_entry.user_id:
+					return {'errors': ['403 Forbidden']}, 403
+				return {'task_id': open_entry.task_id, 'entry_id': open_entry.id}, 200
+			else:
+				return {'errors': ['404 Not Found']}, 404
 		
 	def post(self, team_id, user_id):
 		request_json = request.get_json()
