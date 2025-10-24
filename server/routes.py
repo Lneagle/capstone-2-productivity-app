@@ -148,12 +148,27 @@ class TasksByTeam(Resource):
 				return {'errors': ['404 Not Found']}, 404
 		#else:
 			#return {'errors': ['403 Forbidden']}, 403
-		
-# TODO: Create TaskById (under projects: get, patch, delete), TasksByProject (get, post)
 
 class TasksByProject(Resource):
-	def post(self, client_id, project_id):
-		pass
+	def post(self, team_id, project_id):
+		project = Project.query.filter_by(id=project_id).first()
+
+		if project and project.team_id == team_id:
+			request_json = request.get_json()
+			new_task = Task(name=request_json['name'], completed=False, priority=request_json['priority'])
+			new_task.project = project
+			assignee_id = request_json['assignee_id']
+			if assignee_id:
+				new_task.assignee = User.query.filter_by(id=assignee_id).first()
+		
+			try:
+				db.session.add(new_task)
+				db.session.commit()
+				return TaskSchema().dump(new_task), 201
+			except IntegrityError:
+				return {'errors': ['422 Unprocessable Entity']}, 422
+		else:
+			return {'errors': ['403 Forbidden']}, 403
 
 class TaskById(Resource):
 	def get(self, client_id, project_id, task_id):

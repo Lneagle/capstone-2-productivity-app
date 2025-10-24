@@ -17,6 +17,20 @@ export const fetchTeamUsers = async () => {
   }
 }
 
+export const fetchTeamProjects = async () => {
+  try {
+    const response = await fetch(`${API_URL}/teams/${TEAM_ID}/projects`);
+    if (!response.ok) {
+      throw new Error(`Could not fetch projects for team ${TEAM_ID}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    throw error;
+  }
+}
+
 export const fetchUserTasks = async () => {
   try {
     const response = await fetch(`${API_URL}/teams/${TEAM_ID}/users/${USER_ID}/tasks`);
@@ -131,6 +145,26 @@ export const patchTask = async(client_id, project_id, task_id, body) => {
     });
     if (!response.ok) {
       throw new Error(`Could not edit task`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error:", error);
+    throw error;
+  }
+};
+
+export const postTask = async(project_id, body) => {
+  try {
+    const response = await fetch(`${API_URL}/teams/${TEAM_ID}/projects/${project_id}/tasks`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: body,
+    });
+    if (!response.ok) {
+      throw new Error(`Could not create task`);
     }
     const data = await response.json();
     return data;

@@ -1,17 +1,19 @@
 import { useState, useRef } from "react";
-import { createTimeEntry, endTimeEntry, patchTask } from "../services/fetchData";
+import { createTimeEntry, endTimeEntry, fetchTeamProjects, patchTask, postTask } from "../services/fetchData";
 import Modal from "./Modal";
 
 function TaskList({ tasks, setTasks, openTaskId, openEntryId, teammates }) {
-  console.log(openTaskId, openEntryId);
+  //console.log(openTaskId, openEntryId);
   const sortedTasks = [...tasks];
   const isAdmin = true; //replace with cookie later
   const [enabledId, setEnabledId] = useState(openTaskId);
-  console.log(enabledId);
+  //console.log(enabledId);
   const [isStartDisabled, setIsStartDisabled] = useState(openTaskId)
   const [error, setError] = useState(null);
   const entryId = useRef(openEntryId);
-  console.log(entryId.current);
+  //console.log(entryId.current);
+  const [projects, setProjects] = useState([]);
+  const [showProjects, setShowProjects] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState(null);
 
@@ -48,6 +50,28 @@ function TaskList({ tasks, setTasks, openTaskId, openEntryId, teammates }) {
     }
   };
 
+  const getProjects = async () => {
+    try {
+      const data = await fetchTeamProjects();
+      data.sort((a, b) => {
+        if (a.client.name < b.client.name) {
+          return -1;
+        } else if (a.client.name > b.client.name) {
+          return 1;
+        } else if (a.name < b.name) {
+          return -1;
+        } else if (a.name > b.name) {
+          return 1;
+        } else {
+          return 0;
+        }
+      });
+      setProjects(data);
+    } catch (err) {
+      setError(err);
+    }
+  }
+
   const startTask = (task_id) => {
     setEnabledId(task_id);
     setIsStartDisabled(true);
@@ -60,19 +84,40 @@ function TaskList({ tasks, setTasks, openTaskId, openEntryId, teammates }) {
     endEntry(task_id);
   };
 
+  const addTask = () => {
+    setTaskToEdit(null);
+    if (projects.length == 0) {
+      getProjects();
+    }
+    setShowProjects(true);
+    setIsEditMode(true);
+  }
+
   const editTask = (task) => {
     setIsEditMode(true);
+    setShowProjects(false);
     setTaskToEdit(task);
   }
 
-  const handleSubmit = async (task, data) => {
-    try {
-      const updatedTask = await patchTask(task.project.client.id, task.project.id, task.id, data);
-      setTasks(sortedTasks.map(task => {
-        return task.id == updatedTask.id ? updatedTask : task;
-      }));
-    } catch (err){
-      setError(err);
+  const handleSubmit = async (task, data, project) => {
+    if (task) {
+      try {
+        const updatedTask = await patchTask(task.project.client.id, task.project.id, task.id, data);
+        setTasks(sortedTasks.map(task => {
+          return task.id == updatedTask.id ? updatedTask : task;
+        }));
+        setTaskToEdit(null);
+      } catch (err) {
+        setError(err);
+      }
+    } else {
+      try {
+        console.log(data);
+        const newTask = await postTask(project, data);
+        setTasks([...sortedTasks, newTask]);
+      } catch (err) {
+        setError(err);
+      }
     }
   };
 
@@ -96,7 +141,7 @@ function TaskList({ tasks, setTasks, openTaskId, openEntryId, teammates }) {
 			<td>{task.project.name}</td>
 			<td>{task.name}</td>
 			<td>{task.priority}</td>
-      {isAdmin && <td>{task.assignee.name}</td>}
+      {isAdmin && <td>{task.assignee ? task.assignee.name : ''}</td>}
 			<td>{task.completed ? '✓' : <button onClick={() => completeTask(task.project.client.id, task.project.id, task.id)}>Mark Completed</button>}</td>
 			<td>{isAdmin ? <button onClick={() => editTask(task)}>Edit</button> : <button onClick={() => startTask(task.id)} disabled={isStartDisabled || task.completed}>Start</button>}</td>
 			<td>{isAdmin ? <button onClick={() => deleteTask(task.id)}>Delete</button> : <button onClick={() => stopTask(task.id)} disabled={task.id != enabledId}>Stop</button>}</td>
@@ -124,7 +169,7 @@ function TaskList({ tasks, setTasks, openTaskId, openEntryId, teammates }) {
             <tr>
               <th></th>
               <th><button>Add Project</button></th>
-              <th><button>Add Task</button></th>
+              <th><button onClick={() => addTask()}>Add Task</button></th>
               <th></th>
               <th></th>
               <th></th>
@@ -135,7 +180,7 @@ function TaskList({ tasks, setTasks, openTaskId, openEntryId, teammates }) {
 					{taskList}
 				</tbody>
 			</table>
-      {isEditMode && <Modal setIsEditMode={setIsEditMode} task={taskToEdit} teammates={teammates} onSubmit={handleSubmit}/>}
+      {isEditMode && <Modal setIsEditMode={setIsEditMode} projects={projects} showProjects={showProjects} task={taskToEdit} teammates={teammates} onSubmit={handleSubmit}/>}
 		</>
 	)
 }
