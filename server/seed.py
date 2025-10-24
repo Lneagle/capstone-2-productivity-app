@@ -17,15 +17,15 @@ with app.app_context():
 
   print('Creating teams...')
   team1 = Team(name="Dev", department="Operations")
-  team2 = Team(name="Payroll", department="HR")
+  # team2 = Team(name="Payroll", department="HR")
 
-  db.session.add_all([team1, team2])
+  db.session.add(team1)
   
   print('Creating users...')
   team1_admin = User(name="Dev Admin", admin=True)
   team1_admin.team = team1
-  team2_admin = User(name="Payroll Admin", admin=True)
-  team2_admin.team = team2
+  # team2_admin = User(name="Payroll Admin", admin=True)
+  # team2_admin.team = team2
 
   users = []
   usernames = []
@@ -36,10 +36,11 @@ with app.app_context():
       username = fake.first_name()
     usernames.append(username)
     user = User(name=username, admin=False)
-    user.team = rc([team1, team2])
+    # user.team = rc([team1, team2])
+    user.team = team1
     users.append(user)
 
-  db.session.add_all([team1_admin, team2_admin, *users])
+  db.session.add_all([team1_admin, *users])
 
   print('Creating clients...')
   client1 = Client(name='Viridian Dynamics', contact="Veronica", active=True)
@@ -54,7 +55,7 @@ with app.app_context():
   for i in range(10):
     project = Project(name=fake.catch_phrase(), completed=False)
     project.client = rc([client1, client2, client3])
-    project.team = rc([team1, team2])
+    project.team = team1
     projects.append(project)
 
   db.session.add_all(projects)
@@ -74,9 +75,9 @@ with app.app_context():
   entries = []
 
   for i in range(100):
-    start = fake.past_datetime()
+    start = fake.past_datetime('-7d')
     while start.weekday() > 4 or start.time().hour < 8 or start.time().hour > 17:
-      start = fake.past_datetime()
+      start = fake.past_datetime('-7d')
     interval = randrange(15, 120)
     end = start + timedelta(minutes=interval)
     entry = TimeEntry(start_time=start, end_time=end)

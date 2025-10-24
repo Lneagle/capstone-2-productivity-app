@@ -59,11 +59,11 @@ export const fetchTeamTasks = async () => {
   }
 };
 
-export const fetchTimeEntries = async() => {
+export const fetchTimeEntries = async(user_id) => {
   try {
-    const response = await fetch(`${API_URL}/teams/${TEAM_ID}/users/${USER_ID}/time_entries`);
+    const response = await fetch(`${API_URL}/teams/${TEAM_ID}/users/${user_id}/time_entries`);
     if (!response.ok) {
-      throw new Error(`Could not fetch time entries for user ${USER_ID}`);
+      throw new Error(`Could not fetch time entries for user ${user_id}`);
     }
     const data = await response.json();
     return data;
