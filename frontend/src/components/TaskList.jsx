@@ -1,16 +1,19 @@
 import { useState, useRef } from "react";
 import { createTimeEntry, endTimeEntry, patchTask } from "../services/fetchData";
+import Modal from "./Modal";
 
-function TaskList({ tasks, setTasks, openTaskId, openEntryId }) {
+function TaskList({ tasks, setTasks, openTaskId, openEntryId, teammates }) {
   console.log(openTaskId, openEntryId);
   const sortedTasks = [...tasks];
-  const isAdmin = false; //replace with cookie later
+  const isAdmin = true; //replace with cookie later
   const [enabledId, setEnabledId] = useState(openTaskId);
-  console.log(enabledId)
+  console.log(enabledId);
   const [isStartDisabled, setIsStartDisabled] = useState(openTaskId)
   const [error, setError] = useState(null);
   const entryId = useRef(openEntryId);
-  console.log(entryId.current)
+  console.log(entryId.current);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState(null);
 
   sortedTasks.sort((a, b) => {
     const priorities = ["High", "Medium", "Low"]
@@ -57,6 +60,22 @@ function TaskList({ tasks, setTasks, openTaskId, openEntryId }) {
     endEntry(task_id);
   };
 
+  const editTask = (task) => {
+    setIsEditMode(true);
+    setTaskToEdit(task);
+  }
+
+  const handleSubmit = async (task, data) => {
+    try {
+      const updatedTask = await patchTask(task.project.client.id, task.project.id, task.id, data);
+      setTasks(sortedTasks.map(task => {
+        return task.id == updatedTask.id ? updatedTask : task;
+      }));
+    } catch (err){
+      setError(err);
+    }
+  };
+
   const completeTask = async (client_id, project_id, task_id) => {
     try {
       const data = await patchTask(client_id, project_id, task_id, JSON.stringify({"completed": true}));
@@ -70,16 +89,16 @@ function TaskList({ tasks, setTasks, openTaskId, openEntryId }) {
       setError(err);
     }
   };
-
+  
   const taskList = sortedTasks.map(task =>
 		<tr key={task.id}>
 			<td>{task.project.client.name}</td>
 			<td>{task.project.name}</td>
 			<td>{task.name}</td>
 			<td>{task.priority}</td>
-      {isAdmin && <td></td>}
+      {isAdmin && <td>{task.assignee.name}</td>}
 			<td>{task.completed ? '✓' : <button onClick={() => completeTask(task.project.client.id, task.project.id, task.id)}>Mark Completed</button>}</td>
-			<td>{isAdmin ? <button onClick={() => editTask(task.id)}>Edit</button> : <button onClick={() => startTask(task.id)} disabled={isStartDisabled || task.completed}>Start</button>}</td>
+			<td>{isAdmin ? <button onClick={() => editTask(task)}>Edit</button> : <button onClick={() => startTask(task.id)} disabled={isStartDisabled || task.completed}>Start</button>}</td>
 			<td>{isAdmin ? <button onClick={() => deleteTask(task.id)}>Delete</button> : <button onClick={() => stopTask(task.id)} disabled={task.id != enabledId}>Stop</button>}</td>
 		</tr>
 	);
@@ -101,9 +120,22 @@ function TaskList({ tasks, setTasks, openTaskId, openEntryId }) {
 					</tr>
 				</thead>
 				<tbody>
+          {isAdmin &&
+            <tr>
+              <th></th>
+              <th><button>Add Project</button></th>
+              <th><button>Add Task</button></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+            </tr>
+          }
 					{taskList}
 				</tbody>
 			</table>
+      {isEditMode && <Modal setIsEditMode={setIsEditMode} task={taskToEdit} teammates={teammates} onSubmit={handleSubmit}/>}
 		</>
 	)
 }

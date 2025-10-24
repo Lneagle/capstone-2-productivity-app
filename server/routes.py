@@ -132,9 +132,22 @@ class TasksByUser(Resource):
 		if tasks:
 			if not User.query.filter_by(id=user_id, team_id=team_id).first():
 				return {'errors': ['403 Forbidden']}, 403
-			return [TaskSchema().dump(task) for task in tasks]
+			return [TaskSchema().dump(task) for task in tasks], 200
 		else:
 			return {'errors': ['404 Not Found']}, 404
+		
+class TasksByTeam(Resource):
+	def get(self, team_id):
+		#user = User.query.filter_by(id=user_id).first()
+
+		#if user.admin and user.team_id == team_id:
+			tasks = Task.query.join(Project).filter(Project.team_id == team_id).all()
+			if tasks:
+				return [TaskSchema().dump(task) for task in tasks], 200
+			else:
+				return {'errors': ['404 Not Found']}, 404
+		#else:
+			#return {'errors': ['403 Forbidden']}, 403
 		
 # TODO: Create TaskById (under projects: get, patch, delete), TasksByProject (get, post)
 
@@ -161,9 +174,12 @@ class TaskById(Resource):
 				return {'errors': ['403 Forbidden']}, 403
 			request_json = request.get_json()
 			for attr in request_json:
-				setattr(task, attr, request_json[attr])
+				if attr == "assignee_id":
+					task.assignee = User.query.filter_by(id=request_json[attr]).first()
+				else:
+					setattr(task, attr, request_json[attr])
 			db.session.commit()
-			return TaskSchema(exclude=('project',)).dump(task), 200
+			return TaskSchema().dump(task), 200
 		else:
 			return {'errors': ['404 Not Found']}, 404
 		

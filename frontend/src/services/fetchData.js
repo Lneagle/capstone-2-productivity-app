@@ -31,6 +31,20 @@ export const fetchUserTasks = async () => {
   }
 };
 
+export const fetchTeamTasks = async () => {
+  try {
+    const response = await fetch(`${API_URL}/teams/${TEAM_ID}/projects/tasks`);
+    if (!response.ok) {
+      throw new Error(`Could not fetch tasks for team ${TEAM_ID}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error:", error);
+    throw error;
+  }
+};
+
 export const fetchTimeEntries = async() => {
   try {
     const response = await fetch(`${API_URL}/teams/${TEAM_ID}/users/${USER_ID}/time_entries`);

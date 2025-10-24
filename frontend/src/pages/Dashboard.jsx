@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import NavBar from "../components/NavBar";
 import TaskList from "../components/TaskList";
 import StatusList from "../components/StatusList";
-import { fetchOpenTimeEntry, fetchTeamUsers, fetchUserTasks } from "../services/fetchData";
+import { fetchOpenTimeEntry, fetchTeamTasks, fetchTeamUsers, fetchUserTasks } from "../services/fetchData";
 
 function Dashboard() {
+	const isAdmin = true; // replace later
 	const [tasks, setTasks] = useState([]);
   const [tasksLoading, setTasksLoading] = useState(true);
   const [tasksError, setTasksError] = useState(null);
@@ -17,7 +18,12 @@ function Dashboard() {
 	useEffect(() => {
     const getTasks = async () => {
       try {
-        const data = await fetchUserTasks();
+				let data;
+				if (isAdmin) {
+					data = await fetchTeamTasks();
+				} else {
+	        data = await fetchUserTasks();
+				}
         setTasks(data);
       } catch (err) {
         setTasksError(err);
@@ -67,7 +73,7 @@ function Dashboard() {
 				<section>
 					{tasksLoading && <p>Loading tasks...</p>}
 					{tasksError && <p>Error: {tasksError.message}</p>}
-					<TaskList tasks={tasks} setTasks={setTasks} openTaskId={openTaskId} openEntryId={openEntryId} />
+					<TaskList tasks={tasks} setTasks={setTasks} openTaskId={openTaskId} openEntryId={openEntryId} teammates={teammates} />
 				</section>
 				<section>
 					{teamLoading && <p>Loading team statuses...</p>}
