@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { createTimeEntry, endTimeEntry, fetchTeamProjects, patchTask, postTask } from "../services/fetchData";
+import { createTimeEntry, endTimeEntry, fetchTeamProjects, patchTask, postTask, deleteTask } from "../services/fetchData";
 import Modal from "./Modal";
 
 function TaskList({ tasks, setTasks, openTaskId, openEntryId, teammates }) {
@@ -99,6 +99,15 @@ function TaskList({ tasks, setTasks, openTaskId, openEntryId, teammates }) {
     setTaskToEdit(task);
   }
 
+  const removeTask = async (task) => {
+    try {
+      await deleteTask(task.project.client.id, task.project.id, task.id);
+      setTasks(sortedTasks.filter(t => {return t.id != task.id}));
+    } catch (err) {
+      setError(err);
+    }
+  }
+
   const handleSubmit = async (task, data, project) => {
     if (task) {
       try {
@@ -112,7 +121,6 @@ function TaskList({ tasks, setTasks, openTaskId, openEntryId, teammates }) {
       }
     } else {
       try {
-        console.log(data);
         const newTask = await postTask(project, data);
         setTasks([...sortedTasks, newTask]);
       } catch (err) {
@@ -144,7 +152,7 @@ function TaskList({ tasks, setTasks, openTaskId, openEntryId, teammates }) {
       {isAdmin && <td>{task.assignee ? task.assignee.name : ''}</td>}
 			<td>{task.completed ? '✓' : <button onClick={() => completeTask(task.project.client.id, task.project.id, task.id)}>Mark Completed</button>}</td>
 			<td>{isAdmin ? <button onClick={() => editTask(task)}>Edit</button> : <button onClick={() => startTask(task.id)} disabled={isStartDisabled || task.completed}>Start</button>}</td>
-			<td>{isAdmin ? <button onClick={() => deleteTask(task.id)}>Delete</button> : <button onClick={() => stopTask(task.id)} disabled={task.id != enabledId}>Stop</button>}</td>
+			<td>{isAdmin ? <button onClick={() => removeTask(task)}>Delete</button> : <button onClick={() => stopTask(task.id)} disabled={task.id != enabledId}>Stop</button>}</td>
 		</tr>
 	);
 
@@ -161,15 +169,15 @@ function TaskList({ tasks, setTasks, openTaskId, openEntryId, teammates }) {
             {isAdmin && <th>Assignee</th>}
 						<th>Completed</th>
 						<th></th>
-						<th></th>
+						<th><button onClick={() => addTask()}>Add Task</button></th>
 					</tr>
 				</thead>
 				<tbody>
           {isAdmin &&
             <tr>
               <th></th>
-              <th><button>Add Project</button></th>
-              <th><button onClick={() => addTask()}>Add Task</button></th>
+              <th>{/* <button>Add Project</button> */}</th>
+              <th></th>
               <th></th>
               <th></th>
               <th></th>

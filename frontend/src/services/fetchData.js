@@ -173,3 +173,17 @@ export const postTask = async(project_id, body) => {
     throw error;
   }
 };
+
+export const deleteTask = async(client_id, project_id, task_id) => {
+  try {
+    const response = await fetch(`${API_URL}/clients/${client_id}/projects/${project_id}/tasks/${task_id}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) {
+      throw new Error(`Could not delete task`);
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    throw error;
+  }
+};
