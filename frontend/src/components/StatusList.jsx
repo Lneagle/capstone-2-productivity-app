@@ -21,13 +21,13 @@ function StatusList({ teammates, setTeammates }) {
 
   const teamList = statuses.map(person => 
     <li key={person.id}>
-      <h4>{person.name}</h4>
-      <span>{priorityMapping[person.priority]}</span> {person.task}
+      <h4><span className={person.priority}>&#9679;</span> {person.name}</h4>
+      {person.task}
     </li>
   );
 
 	return (
-		<ul>
+		<ul className="status-list">
       {teamList}
 		</ul>
 	)

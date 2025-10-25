@@ -5,7 +5,7 @@ import StatusList from "../components/StatusList";
 import { fetchOpenTimeEntry, fetchTeamTasks, fetchTeamUsers, fetchUserTasks } from "../services/fetchData";
 
 function Dashboard() {
-	const isAdmin = true; // replace later
+	const [isAdmin, setIsAdmin] = useState(false);
 	const [tasks, setTasks] = useState([]);
   const [tasksLoading, setTasksLoading] = useState(true);
   const [tasksError, setTasksError] = useState(null);
@@ -33,7 +33,7 @@ function Dashboard() {
     };
 
     getTasks();
-  }, []);
+  }, [isAdmin]);
 
 	useEffect(() => {
     const getOpenTask = async () => {
@@ -66,16 +66,24 @@ function Dashboard() {
     getTeam();
   }, []);
 
+	const handleToggle = (event) => {
+		setIsAdmin(!isAdmin);
+	}
+
 	return (
 		<>
 			<NavBar />
-			<main>
+			<div className="admin-toggle">
+				<label htmlFor="admin">Admin mode:</label>
+				<input type="checkbox" id="admin" onChange={handleToggle} />
+			</div>
+			<main className="flex">
 				<section>
 					{tasksLoading && <p>Loading tasks...</p>}
 					{tasksError && <p>Error: {tasksError.message}</p>}
-					<TaskList tasks={tasks} setTasks={setTasks} openTaskId={openTaskId} openEntryId={openEntryId} teammates={teammates} />
+					<TaskList tasks={tasks} setTasks={setTasks} openTaskId={openTaskId} openEntryId={openEntryId} teammates={teammates} isAdmin={isAdmin} />
 				</section>
-				<section>
+				<section className="team-status">
 					{teamLoading && <p>Loading team statuses...</p>}
 					{teamError && <p>Error: {teamError.message}</p>}
         	<StatusList teammates={teammates} setTeammates={setTeammates}/>

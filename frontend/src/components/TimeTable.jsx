@@ -46,31 +46,29 @@ function TimeTable({ entries }) {
   })
   
   const timeList = [];
-  let key = 0;
 
   Object.entries(timeAggregate).forEach(([clientName, clientObj]) => {
     timeList.push(
-      <tr key={key}>
+      <tr key={`client-${clientName}`}>
         <th className="client" colSpan={8}>{clientName}</th>
       </tr>);
-    key++;
+    
     Object.entries(clientObj).forEach(([projectName, projectObj]) => {
       timeList.push(
-        <tr key={key}>
+        <tr key={`project-${clientName}-${projectName}`}>
           <th className="project" colSpan={8}>{projectName}</th>
         </tr>
       );
-      key++;
+      
       Object.entries(projectObj).forEach(([taskName, taskObj]) => {
         timeList.push(
-          <tr key={key}>
+          <tr key={`task-${clientName}-${projectName}-${taskName}`}>
             <th className="task">{taskName}</th>
             {headingDates.map(date =>
-              <td>{taskObj[date] ? secondsToTime(taskObj[date]) : ''}</td>
+              <td key={`${taskName}-${date}`}>{taskObj[date] ? secondsToTime(taskObj[date]) : ''}</td>
             )}
           </tr>
         );
-        key++;
       });
     });
   });
@@ -82,7 +80,7 @@ function TimeTable({ entries }) {
         <thead>
           <tr>
             <th></th>
-            {headingDates.map(date => <th>{date}</th>)}
+            {headingDates.map(date => <th key={date}>{date}</th>)}
           </tr>
         </thead>
         <tbody>

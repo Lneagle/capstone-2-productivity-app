@@ -2,10 +2,9 @@ import { useState, useRef } from "react";
 import { createTimeEntry, endTimeEntry, fetchTeamProjects, patchTask, postTask, deleteTask } from "../services/fetchData";
 import Modal from "./Modal";
 
-function TaskList({ tasks, setTasks, openTaskId, openEntryId, teammates }) {
+function TaskList({ tasks, setTasks, openTaskId, openEntryId, teammates, isAdmin }) {
   //console.log(openTaskId, openEntryId);
   const sortedTasks = [...tasks];
-  const isAdmin = true; //replace with cookie later
   const [enabledId, setEnabledId] = useState(openTaskId);
   //console.log(enabledId);
   const [isStartDisabled, setIsStartDisabled] = useState(openTaskId)
@@ -150,16 +149,16 @@ function TaskList({ tasks, setTasks, openTaskId, openEntryId, teammates }) {
 			<td>{task.name}</td>
 			<td>{task.priority}</td>
       {isAdmin && <td>{task.assignee ? task.assignee.name : ''}</td>}
-			<td>{task.completed ? '✓' : <button onClick={() => completeTask(task.project.client.id, task.project.id, task.id)}>Mark Completed</button>}</td>
+			<td className="completed">{task.completed ? '✓' : <input type="checkbox" onClick={() => completeTask(task.project.client.id, task.project.id, task.id)} />}</td>
 			<td>{isAdmin ? <button onClick={() => editTask(task)}>Edit</button> : <button onClick={() => startTask(task.id)} disabled={isStartDisabled || task.completed}>Start</button>}</td>
-			<td>{isAdmin ? <button onClick={() => removeTask(task)}>Delete</button> : <button onClick={() => stopTask(task.id)} disabled={task.id != enabledId}>Stop</button>}</td>
+			<td>{isAdmin ? <button className="delete" onClick={() => removeTask(task)}>Delete</button> : <button onClick={() => stopTask(task.id)} disabled={task.id != enabledId}>Stop</button>}</td>
 		</tr>
 	);
 
 	return (
 		<>
-      {error && <p>Error: {error.message}</p>}
-      <table>
+      {error && <p className="error">Error: {error.message}</p>}
+      <table >
 				<thead>
 					<tr>
 						<th>Client</th>
@@ -168,8 +167,7 @@ function TaskList({ tasks, setTasks, openTaskId, openEntryId, teammates }) {
 						<th>Priority</th>
             {isAdmin && <th>Assignee</th>}
 						<th>Completed</th>
-						<th></th>
-						<th><button onClick={() => addTask()}>Add Task</button></th>
+						<th colSpan={2}><button className="add" onClick={() => addTask()}>Add Task</button></th>
 					</tr>
 				</thead>
 				<tbody>

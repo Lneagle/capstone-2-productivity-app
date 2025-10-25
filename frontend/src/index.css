@@ -9,15 +9,8 @@
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --line-color: #999;
+  --text-color: #213547;
 }
 
 a {
@@ -31,47 +24,73 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
+  /*display: flex;
+  place-items: center;*/
   min-width: 320px;
   min-height: 100vh;
+  color: var(--text-color);
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+nav {
+  text-align: center;
+  width: 100%;
+  border-bottom: 1px solid var(--line-color);
+}
+
+nav a {
+  display: inline-block;
+  padding: 1em;
+}
+
+nav a.active {
+  color: var(--text-color);
+}
+
+.admin-toggle {
+  margin: 1em 0;
+}
+
+main.flex {
+  display: flex;
+  justify-content: space-between;
 }
 
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  font-size: 0.9em;
+  padding: 0.4em 0.5em;
+  background-color: #5070c0;
+  border-radius: 5px;
+  border-style: none;
+  box-sizing: border-box;
+  color: #FFFFFF;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+button:hover {
+  border-color: #2a2d5f;
+}
+
+button:focus,
+button:focus-visible {
+  box-shadow: inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.2), 0px 0.5px 1.5px rgba(54, 122, 246, 0.25), 0px 0px 0px 3.5px rgba(58, 108, 217, 0.5);
+  outline: 0;
+}
+
+button:disabled {
+  background-color: rgba(239, 239, 239);
+  color: rgba(16, 16, 16, 0.5);
+  border-color: rgba(118, 118, 118, 0.3);
+}
+
+button.delete {
+  background-color: crimson;
+}
+
+button.add {
+  background-color: rgb(27, 187, 91);
+}
+
+p.error {
+  color: red;
 }
 
 .modal-container {
@@ -110,15 +129,36 @@ button:focus-visible {
 
 .modal .form-group input,
 .modal .form-group select {
-  border: 1px solid #999;
+  border: 1px solid var(--line-color);
   border-radius: 0.3em;
   padding: 0.3em;
   font-size: 1em;
-  color: #213547;
+  color: var(--text-color);
+}
+
+#user-select {
+  margin: 0 0 1em 0.5em;
+  font-family: inherit;
+}
+
+th, td {
+  padding: 0.25em 0.5em;
+}
+
+td {
+  text-align: left;
+}
+
+td.completed {
+  text-align: center;
+}
+
+.timetable {
+  width: 100%;
 }
 
 .timetable, .timetable * {
-  border: 1px solid #999;
+  border: 1px solid var(--line-color);
   border-collapse: collapse;
 }
 
@@ -135,4 +175,42 @@ button:focus-visible {
   padding-left: 2em;
   font-weight: normal;
   font-size: 0.9em;
+}
+
+.timetable td {
+  font-size: 0.9em;
+  text-align: right;
+}
+
+section.team-status {
+  margin-left: 3em;
+  text-align: left;
+}
+
+ul.status-list {
+  list-style: none;
+}
+
+.status-list li {
+  margin-bottom: 0.5em;
+}
+
+.status-list h4 {
+  margin: 0;
+}
+
+.status-list h4 span {
+  font-size: 1.6em;
+}
+
+span.High {
+  color: crimson;
+}
+
+span.Medium {
+  color: rgb(255, 242, 0);
+}
+
+span.Low {
+  color: rgb(27, 187, 91);
 }
