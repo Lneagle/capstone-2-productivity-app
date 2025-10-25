@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { createTimeEntry, endTimeEntry, fetchTeamProjects, patchTask, postTask, deleteTask } from "../services/fetchData";
 import Modal from "./Modal";
 
-function TaskList({ tasks, setTasks, openTaskId, openEntryId, teammates, isAdmin }) {
+function TaskList({ tasks, setTasks, openTaskId, isTaskOpen, setIsTaskOpen, openEntryId, teammates, isAdmin }) {
   //console.log(openTaskId, openEntryId);
   const sortedTasks = [...tasks];
   const [enabledId, setEnabledId] = useState(openTaskId);
@@ -35,6 +35,7 @@ function TaskList({ tasks, setTasks, openTaskId, openEntryId, teammates, isAdmin
     try {
       const data = await createTimeEntry(task_id);
       entryId.current = data.id;
+      setIsTaskOpen(true);
     } catch (err) {
       setError(err);
     }
@@ -44,6 +45,7 @@ function TaskList({ tasks, setTasks, openTaskId, openEntryId, teammates, isAdmin
     try {
       const data = await endTimeEntry(entryId.current);
       entryId.current = null;
+      setIsTaskOpen(false);
     } catch (err) {
       setError(err);
     }

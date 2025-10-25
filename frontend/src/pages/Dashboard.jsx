@@ -11,6 +11,7 @@ function Dashboard() {
   const [tasksError, setTasksError] = useState(null);
 	const [openTaskId, setOpenTaskId] = useState(null);
 	const [openEntryId, setOpenEntryId] = useState(null);
+	const [isTaskOpen, setIsTaskOpen] = useState(false);
 	const [teammates, setTeammates] = useState([]);
   const [teamLoading, setTeamLoading] = useState(true);
   const [teamError, setTeamError] = useState(null);
@@ -41,6 +42,7 @@ function Dashboard() {
         const data = await fetchOpenTimeEntry();
         setOpenTaskId(data.task_id);
 				setOpenEntryId(data.entry_id);
+				setIsTaskOpen(true);
       } catch (err) {
 				console.log(err);
         setOpenTaskId(null);
@@ -64,7 +66,7 @@ function Dashboard() {
     };
 
     getTeam();
-  }, []);
+  }, [isTaskOpen]);
 
 	const handleToggle = (event) => {
 		setIsAdmin(!isAdmin);
@@ -81,12 +83,13 @@ function Dashboard() {
 				<section>
 					{tasksLoading && <p>Loading tasks...</p>}
 					{tasksError && <p>Error: {tasksError.message}</p>}
-					<TaskList tasks={tasks} setTasks={setTasks} openTaskId={openTaskId} openEntryId={openEntryId} teammates={teammates} isAdmin={isAdmin} />
+					<TaskList tasks={tasks} setTasks={setTasks} openTaskId={openTaskId} isTaskOpen={isTaskOpen} setIsTaskOpen={setIsTaskOpen} openEntryId={openEntryId} teammates={teammates} isAdmin={isAdmin} />
 				</section>
 				<section className="team-status">
+					<h3>Team Status</h3>
 					{teamLoading && <p>Loading team statuses...</p>}
 					{teamError && <p>Error: {teamError.message}</p>}
-        	<StatusList teammates={teammates} setTeammates={setTeammates}/>
+        	<StatusList teammates={teammates} />
 				</section>
 			</main>
 		</>

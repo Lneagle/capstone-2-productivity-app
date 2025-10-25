@@ -1,14 +1,9 @@
-function StatusList({ teammates, setTeammates }) {
-  const priorityMapping = {
-    'High': '🔴',
-    'Medium': '🟡',
-    'Low': '🟢'
-  };
+function StatusList({ teammates }) {
 
   const statuses = teammates.map(person => {
     const statusObj = {};
     statusObj.name = person.name;
-    statusObj.task = "free";
+    statusObj.task = "Free";
     statusObj.priority = 'Low';
     person.time_entries.forEach(entry => {
       if (entry.end_time == null) {
