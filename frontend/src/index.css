@@ -89,6 +89,10 @@ button.add {
   background-color: rgb(27, 187, 91);
 }
 
+button.close {
+  color: var(--text-color)
+}
+
 p.error {
   color: red;
 }

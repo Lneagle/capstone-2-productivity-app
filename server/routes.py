@@ -25,7 +25,7 @@ class UsersByTeam(Resource):
 		users = User.query.filter_by(team_id=team_id).all()
 
 		if users:
-			return [UserSchema().dump(user) for user in users]
+			return [UserSchema().dump(user) for user in users], 200
 		else:
 			return {'errors': ['404 Not Found']}, 404
 		
@@ -34,7 +34,7 @@ class UserById(Resource):
 		(user, err_response) = verify_ids(model=User, isList=False, item_id=user_id, team_id=team_id)
 
 		if user:
-			return UserSchema().dump(user)
+			return UserSchema().dump(user), 200
 		else:
 			return err_response
 
@@ -43,7 +43,7 @@ class ClientIndex(Resource):
 		clients = Client.query.all()
     
 		if clients:
-			return [ClientSchema().dump(client) for client in clients]
+			return [ClientSchema().dump(client) for client in clients], 200
 		else:
 			return {'errors': ['404 Not Found']}, 404
 		
@@ -61,6 +61,9 @@ class ClientById(Resource):
 
 		if client:
 			request_json = request.get_json()
+			if not request_json:
+				return {'errors': ['Request body required']}, 400
+			
 			for attr in request_json:
 				setattr(client, attr, request_json[attr])
 			db.session.commit()
@@ -72,30 +75,47 @@ class ProjectsByTeam(Resource):
 	def get(self, team_id):
 		projects = Project.query.filter_by(team_id=team_id).all()
 
-		if len(projects) > 0:
-			return [ProjectSchema(exclude=('team',)).dump(project) for project in projects]
+		if projects:
+			return [ProjectSchema(exclude=('team',)).dump(project) for project in projects], 200
 		else:
 			return {'errors': ['404 Not Found']}, 404
 		
 	def post(self, team_id):
 		request_json = request.get_json()
-		new_project = Project(name=request_json['name'], completed=False)
-		new_project.client = Client.query.filter_by(id=request_json["client_id"]).first()
-		new_project.team = Team.query.filter_by(id=team_id).first()
+		if not request_json:
+			return {'errors': ['Request body required']}, 400
 		
+		if 'name' not in request_json:
+			return {'errors': ['name is required']}, 400
+		
+		if not isinstance(request_json['name'], str) or not request_json['name'].strip():
+			return {'errors': ['name must be a non-empty string']}, 400
+
+		team = Team.query.filter_by(id=team_id).first()
+		if not team:
+			return {'errors': ['Team not found']}, 404
+		
+		client = Client.query.filter_by(id=request_json["client_id"]).first()
+		if not client:
+			return {'errors': ['Client not found']}, 404
+
 		try:
+			new_project = Project(name=request_json['name'], completed=False)
+			new_project.team = team
+			new_project.client = client
 			db.session.add(new_project)
 			db.session.commit()
 			return ProjectSchema().dump(new_project), 201
-		except IntegrityError:
-			return {'errors': ['422 Unprocessable Entity']}, 422
+		except IntegrityError as e:
+			db.session.rollback()
+			return {'errors': ['Database constraint violation']}, 422
 		
 class ProjectById(Resource):
 	def get(self, team_id, project_id):
 		(project, err_response) = verify_ids(model=Project, isList=False, item_id=project_id, team_id=team_id)
 		
 		if project:
-			return ProjectSchema(exclude=('team',)).dump(project)
+			return ProjectSchema(exclude=('team',)).dump(project), 200
 		else:
 			return err_response
 		
@@ -104,6 +124,9 @@ class ProjectById(Resource):
 
 		if project:
 			request_json = request.get_json()
+			if not request_json:
+				return {'errors': ['Request body required']}, 400
+
 			for attr in request_json:
 				setattr(project, attr, request_json[attr])
 			db.session.commit()
@@ -117,7 +140,7 @@ class ProjectById(Resource):
 		if project:
 			time_entries = TimeEntry.query.join(Task).filter(Task.project_id == project_id).all()
 			if time_entries:
-				return {'errors': ['405 Method Not Allowed']}, 405
+				return {'errors': ['405 Method Not Allowed']}, 405 # Do not delete projects that have time entries attached
 			else:
 				db.session.delete(project)
 				db.session.commit()
@@ -155,18 +178,35 @@ class TasksByProject(Resource):
 
 		if project and project.team_id == team_id:
 			request_json = request.get_json()
-			new_task = Task(name=request_json['name'], completed=False, priority=request_json['priority'])
-			new_task.project = project
+			if not request_json:
+				return {'errors': ['Request body required']}, 400
+			
+			if 'name' not in request_json or 'priority' not in request_json:
+				return {'errors': ['name and priority are required']}, 400
+			
+			if not isinstance(request_json['name'], str) or not request_json['name'].strip():
+				return {'errors': ['name must be a non-empty string']}, 400
+			
+			if request_json['priority'] not in ['High', 'Medium', 'Low']:
+				return {'errors': ['priority must be High, Medium, or Low']}, 400
+			
 			assignee_id = request_json['assignee_id']
 			if assignee_id:
-				new_task.assignee = User.query.filter_by(id=assignee_id).first()
+				assignee = User.query.filter_by(id=assignee_id).first()
+				if not assignee:
+					return {'errors': ['Assignee not found']}, 404
 		
 			try:
+				new_task = Task(name=request_json['name'], completed=False, priority=request_json['priority'])
+				new_task.project = project
+				if assignee_id:
+					new_task.assignee = assignee
 				db.session.add(new_task)
 				db.session.commit()
 				return TaskSchema().dump(new_task), 201
-			except IntegrityError:
-				return {'errors': ['422 Unprocessable Entity']}, 422
+			except IntegrityError as e:
+				db.session.rollback()
+				return {'errors': ['Database constraint violation']}, 422
 		else:
 			return {'errors': ['403 Forbidden']}, 403
 
@@ -188,9 +228,17 @@ class TaskById(Resource):
 			if task.project_id != project_id or task.project.client_id != client_id:
 				return {'errors': ['403 Forbidden']}, 403
 			request_json = request.get_json()
+			if not request_json:
+				return {'errors': ['Request body required']}, 400
+			
 			for attr in request_json:
 				if attr == "assignee_id":
-					task.assignee = User.query.filter_by(id=request_json[attr]).first()
+					assignee_id = request_json[attr]
+					assignee = User.query.filter_by(id=assignee_id).first()
+					if assignee:
+						task.assignee = assignee
+					else:
+						return {'errors': ['Assignee not found']}, 404
 				else:
 					setattr(task, attr, request_json[attr])
 			db.session.commit()
@@ -238,19 +286,25 @@ class TimeEntriesByUser(Resource):
 		
 	def post(self, team_id, user_id):
 		request_json = request.get_json()
+		if not request_json:
+			return {'errors': ['Request body required']}, 400
+		
+		if 'task_id' not in request_json or 'start_time' not in request_json:
+			return {'errors': ['task_id and start_time are required']}, 400
 
 		if not User.query.filter_by(id=user_id, team_id=team_id).first() or not Task.query.filter_by(id=request_json['task_id'], assignee_id=user_id):
-				return {'errors': ['403 Forbidden']}, 403
-		new_entry = TimeEntry(start_time=datetime.fromtimestamp(request_json['start_time'] / 1000))
-		new_entry.user = User.query.filter_by(id=user_id).first()
-		new_entry.task = Task.query.filter_by(id=request_json['task_id']).first()
+			return {'errors': ['403 Forbidden']}, 403
 		
 		try:
+			new_entry = TimeEntry(start_time=datetime.fromtimestamp(request_json['start_time'] / 1000))
+			new_entry.user = User.query.filter_by(id=user_id).first()
+			new_entry.task = Task.query.filter_by(id=request_json['task_id']).first()
 			db.session.add(new_entry)
 			db.session.commit()
 			return TimeEntrySchema().dump(new_entry), 201
-		except IntegrityError:
-			return {'errors': ['422 Unprocessable Entity']}, 422
+		except IntegrityError as e:
+			db.session.rollback()
+			return {'errors': ['Database constraint violation']}, 422
 		
 class TimeEntryById(Resource):
 	def get(self, team_id, user_id, entry_id):
@@ -270,9 +324,15 @@ class TimeEntryById(Resource):
 			if not entry.user_id == user_id:
 				return {'errors': ['403 Forbidden']}, 403
 			request_json = request.get_json()
+			if not request_json:
+				return {'errors': ['Request body required']}, 400
+			
 			for attr in request_json:
 				if attr == "end_time":
-					setattr(entry, attr, datetime.fromtimestamp(request_json[attr] / 1000))
+					end_time = datetime.fromtimestamp(request_json[attr] / 1000)
+					if end_time < entry.start_time:
+						return {'errors': ['End time cannot be before start time']}, 400
+					setattr(entry, attr, end_time)
 				else:
 					setattr(entry, attr, request_json[attr])
 			db.session.commit()

@@ -101,6 +101,7 @@ function TaskList({ tasks, setTasks, openTaskId, isTaskOpen, setIsTaskOpen, open
   }
 
   const removeTask = async (task) => {
+    setError(null);
     try {
       await deleteTask(task.project.client.id, task.project.id, task.id);
       setTasks(sortedTasks.filter(t => {return t.id != task.id}));
@@ -110,6 +111,7 @@ function TaskList({ tasks, setTasks, openTaskId, isTaskOpen, setIsTaskOpen, open
   }
 
   const handleSubmit = async (task, data, project) => {
+    setError(null);
     if (task) {
       try {
         const updatedTask = await patchTask(task.project.client.id, task.project.id, task.id, data);
@@ -131,6 +133,7 @@ function TaskList({ tasks, setTasks, openTaskId, isTaskOpen, setIsTaskOpen, open
   };
 
   const completeTask = async (client_id, project_id, task_id) => {
+    setError(null);
     try {
       const data = await patchTask(client_id, project_id, task_id, JSON.stringify({"completed": true}));
       sortedTasks.forEach(task => {
@@ -169,7 +172,7 @@ function TaskList({ tasks, setTasks, openTaskId, isTaskOpen, setIsTaskOpen, open
 						<th>Priority</th>
             {isAdmin && <th>Assignee</th>}
 						<th>Completed</th>
-						<th colSpan={2}><button className="add" onClick={() => addTask()}>Add Task</button></th>
+						<th colSpan={2}>{isAdmin && <button className="add" onClick={() => addTask()}>Add Task</button>}</th>
 					</tr>
 				</thead>
 				<tbody>
