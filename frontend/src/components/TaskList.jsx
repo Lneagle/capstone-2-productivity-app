@@ -163,6 +163,7 @@ function TaskList({ tasks, setTasks, openTaskId, isTaskOpen, setIsTaskOpen, open
 	return (
 		<>
       {error && <p className="error">Error: {error.message}</p>}
+			{tasks.length === 0 && <p>No tasks yet.  {isAdmin && <>Create your first task to get started! <button className="add" onClick={() => addTask()}>Add Task</button></>}</p>}
       <table >
 				<thead>
 					<tr>
