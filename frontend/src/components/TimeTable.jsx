@@ -26,7 +26,7 @@ function TimeTable({ entries }) {
       const clientName = entry.task.project.client.name;
       const projectName = entry.task.project.name;
       const taskName = entry.task.name;
-      const date = entry.start_time.substring(5, 10);
+      const date = entry.start_time.substring(5, 10).replace(/^0/, '');
       if (!timeAggregate[clientName]) {
         timeAggregate[clientName] = {};
       }
