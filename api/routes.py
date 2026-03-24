@@ -3,8 +3,8 @@ from flask_restful import Resource
 from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime, date, time, timedelta
-from config import db
-from models import *
+from .config import db
+from .models import *
 
 def verify_ids(model, isList, item_id, team_id=None):
 	if isList:

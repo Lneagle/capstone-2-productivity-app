@@ -1,7 +1,7 @@
 from sqlalchemy.orm import validates
 from marshmallow import Schema, fields
 
-from config import db
+from .config import db
 
 class Team(db.Model):
   __tablename__ = 'teams'
