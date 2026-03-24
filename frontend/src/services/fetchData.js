@@ -1,7 +1,7 @@
 //Replace when authentication implemented
 const TEAM_ID = 1;
 const USER_ID = 1;
-const API_URL = "http://localhost:5555";
+const API_URL = "https://capstone-2-productivity-app-api.vercel.app";
 
 export const fetchTeamUsers = async () => {
   try {
