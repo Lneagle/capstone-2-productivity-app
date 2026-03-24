@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from config import app, db, api
+from .config import app, db, api
 from routes import *
 
 api.add_resource(UsersByTeam, '/teams/<int:team_id>/users', endpoint='/teams/<int:team_id>/users')
@@ -16,5 +16,5 @@ api.add_resource(TaskById, '/clients/<int:client_id>/projects/<int:project_id>/t
 api.add_resource(TimeEntriesByUser, '/teams/<int:team_id>/users/<int:user_id>/time_entries', endpoint='/teams/<int:team_id>/users/<int:user_id>/time_entries')
 api.add_resource(TimeEntryById, '/teams/<int:team_id>/users/<int:user_id>/time_entries/<int:entry_id>', endpoint='/teams/<int:team_id>/users/<int:user_id>/time_entries/<int:entry_id>')
 
-# if __name__ == '__main__':
-#   app.run(port=5555, debug=True)
+if __name__ == '__main__':
+  app.run(port=5555, debug=True)
