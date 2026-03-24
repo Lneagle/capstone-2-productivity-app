@@ -11,6 +11,9 @@
   font-weight: 400;
   --line-color: #999;
   --text-color: #213547;
+  --th-1-color: #99c1de;
+  --th-2-color: #bcd4e6;
+  --th-3-color: #d6e2e9;
 }
 
 a {
@@ -171,9 +174,14 @@ td.completed {
   text-align: left;
 }
 
+.timetable .client {
+  background-color: var(--th-1-color);
+}
+
 .timetable .project {
   padding-left: 1em;
   font-size: 0.9em;
+  background-color: var(--th-2-color);
 }
 
 .timetable .task {
@@ -185,6 +193,10 @@ td.completed {
 .timetable td {
   font-size: 0.9em;
   text-align: right;
+}
+
+.timetable th:nth-child(even), .timetable td:nth-child(even) {
+  background-color: var(--th-3-color);
 }
 
 section.team-status {
