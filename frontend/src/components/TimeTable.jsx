@@ -3,6 +3,8 @@ function TimeTable({ entries }) {
   const inProgress = [];
   const headingDates = [];
 
+  headingDates.push('Total');
+
   for (let i = 0; i < 7; i++) {
     const d = new Date();
     d.setDate(d.getDate() - i);
@@ -26,7 +28,7 @@ function TimeTable({ entries }) {
       const clientName = entry.task.project.client.name;
       const projectName = entry.task.project.name;
       const taskName = entry.task.name;
-      const date = entry.start_time.substring(5, 10).replace(/^0/, '');
+      const date = entry.start_time.substring(5, 10).replace(/(^|-)0/g, '$1');
       if (!timeAggregate[clientName]) {
         timeAggregate[clientName] = {};
       }
@@ -35,28 +37,30 @@ function TimeTable({ entries }) {
       }
       if (!timeAggregate[clientName][projectName][taskName]) {
         timeAggregate[clientName][projectName][taskName] = {};
+        timeAggregate[clientName][projectName][taskName]['Total'] = 0;
       }
       if (!timeAggregate[clientName][projectName][taskName][date]) {
         timeAggregate[clientName][projectName][taskName][date] = 0;
       }
       timeAggregate[clientName][projectName][taskName][date] += Date.parse(entry.end_time) - Date.parse(entry.start_time);
+      timeAggregate[clientName][projectName][taskName]['Total'] += Date.parse(entry.end_time) - Date.parse(entry.start_time);
     } else {
       inProgress.push(entry);
     }
   })
-  
+
   const timeList = [];
 
   Object.entries(timeAggregate).forEach(([clientName, clientObj]) => {
     timeList.push(
       <tr key={`client-${clientName}`}>
-        <th className="client" colSpan={8}>{clientName}</th>
+        <th className="client" colSpan={headingDates.length + 1}>{clientName}</th>
       </tr>);
     
     Object.entries(clientObj).forEach(([projectName, projectObj]) => {
       timeList.push(
         <tr key={`project-${clientName}-${projectName}`}>
-          <th className="project" colSpan={8}>{projectName}</th>
+          <th className="project" colSpan={headingDates.length + 1}>{projectName}</th>
         </tr>
       );
       
@@ -72,7 +76,6 @@ function TimeTable({ entries }) {
       });
     });
   });
-
 
 	return (
 		<>
