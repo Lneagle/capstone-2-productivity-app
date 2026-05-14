@@ -1,5 +1,6 @@
 function TimeTable({ entries }) {
   const timeAggregate = {};
+  const timeByDate = {};
   const inProgress = [];
   const headingDates = [];
 
@@ -42,8 +43,14 @@ function TimeTable({ entries }) {
       if (!timeAggregate[clientName][projectName][taskName][date]) {
         timeAggregate[clientName][projectName][taskName][date] = 0;
       }
-      timeAggregate[clientName][projectName][taskName][date] += Date.parse(entry.end_time) - Date.parse(entry.start_time);
-      timeAggregate[clientName][projectName][taskName]['Total'] += Date.parse(entry.end_time) - Date.parse(entry.start_time);
+      if (!timeByDate[date]) {
+        timeByDate[date] = 0;
+      }
+
+      const entryTime = Date.parse(entry.end_time) - Date.parse(entry.start_time);
+      timeAggregate[clientName][projectName][taskName][date] += entryTime;
+      timeAggregate[clientName][projectName][taskName]['Total'] += entryTime;
+      timeByDate[date] += entryTime;
     } else {
       inProgress.push(entry);
     }
@@ -76,6 +83,15 @@ function TimeTable({ entries }) {
       });
     });
   });
+
+  timeList.push(
+    <tr key={'total-row'}>
+      <th className="client">Total</th>
+      {headingDates.map(date =>
+        <td key={`total-${date}`}>{timeByDate[date] ? secondsToTime(timeByDate[date]) : ''}</td>
+      )}
+    </tr>
+  )
 
 	return (
 		<>
